@@ -5,9 +5,9 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronUp} from "@fortawesome/free-solid-svg-icons";
 import React, {useState} from "react";
 import {ulid} from "ulid";
-import {createTaskType, updateTaskType} from "@/app/page";
+import {createTaskType} from "@/app/page";
 
-export const Tasks = ({initialTasks}:{initialTasks:Todo[]})=> {
+export const Tasks = ({initialTasks}: { initialTasks: Todo[] }) => {
     const [tasks, setTasks] = useState<Todo[]>(initialTasks);
     const addTask = (newTask: Todo): void => {
         setTasks(prevTasks => [...prevTasks, newTask]);
@@ -17,8 +17,8 @@ export const Tasks = ({initialTasks}:{initialTasks:Todo[]})=> {
             task.id === newTask.id ? newTask : task
         ));
     };
-    const saveData =async (task: createTaskType) => {
-        await fetch("http://localhost:3000/api/tasks", {
+    const saveData = async (task: createTaskType) => {
+        await fetch(`${process.env.API_URL}/api/tasks`, {
             cache: "no-cache", method: "POST", body: JSON.stringify({
                 title: task.title,
             })
@@ -30,7 +30,7 @@ export const Tasks = ({initialTasks}:{initialTasks:Todo[]})=> {
             return;
         }
         addTask({title: input.value, isDone: false, id: ulid()});
-        saveData({title:input.value});
+        saveData({title: input.value});
         input.value = "";
     };
     return (
