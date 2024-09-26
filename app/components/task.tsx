@@ -1,7 +1,7 @@
 import {TaskType} from "@/app/page";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCircle, faCircleCheck} from "@fortawesome/free-solid-svg-icons";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 
 export const Task = ({initialTask, updateTaskList}: {
     initialTask: TaskType,
@@ -16,10 +16,11 @@ export const Task = ({initialTask, updateTaskList}: {
         }));
     };
 
-    const updateTitle = (newText: string) => {
+    const updateTitle = (e: React.FormEvent<HTMLInputElement>) => {
+        const input = e.target as HTMLInputElement;
         setTask(prevTask => ({
             ...prevTask,
-            title: newText
+            title: input.value
         }));
     };
 
@@ -41,7 +42,7 @@ export const Task = ({initialTask, updateTaskList}: {
             </th>
             <td className="h-full">
                 <div className="border-2 hover:border-gray-300 border-white focus:shadow-2xl h-12 outline-none">
-                    <input value={task.title} onInput={(e) => updateTitle(e.target.value)}
+                    <input value={task.title} onInput={(e) => updateTitle(e)}
                            className={`h-full outline-none ${task.isDone ? "line-through decoration-2" : ""}`}/>
                 </div>
             </td>
