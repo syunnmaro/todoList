@@ -11,7 +11,7 @@ export const Task = ({initialTask, updateTaskList}: {
 }) => {
     const [task, setTask] = useState<Todo>(initialTask);
     const updateData = async (task: updateTaskType) => {
-        await fetch(`${process.env.API_URL}/api/tasks`, {
+        await fetch(`/api/tasks`, {
             cache: "no-cache", method: "PUT", body: JSON.stringify({
                 id: task.id,
                 title: task.title,
@@ -25,7 +25,7 @@ export const Task = ({initialTask, updateTaskList}: {
             isDone: !task.isDone
         }
         setTask(newTask);
-        updateData(task);
+        updateData(newTask);
         return newTask
     };
 
