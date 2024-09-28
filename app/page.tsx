@@ -1,6 +1,6 @@
 "use client";
 import {Todo as TodoType} from "@prisma/client";
-import {Todo} from "@/app/components/Todo";
+import {Todo} from "@/app/components/todo";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronUp} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
@@ -21,6 +21,11 @@ export default function TodoList() {
             prevTodos.map((todo) => (todo.id === newTodo.id ? newTodo : todo))
         );
     };
+    const deleteTodoListState = (deletedTodo: TodoType) => {
+        setTodos((prevTodos) =>
+            prevTodos.filter((todo) => (todo.id !== deletedTodo.id))
+        )
+    }
 
     const sendPostRequest = async (todo: createTodoType) => {
         try {
@@ -73,7 +78,7 @@ export default function TodoList() {
                 {isLoading ? (
                     <input
                         type="text"
-                        placeholder="タスクを追加"
+                        placeholder="読み込み中"
                         disabled={true}
                         className="p-2 outline-0 w-full"
                         onKeyDown={handleKeyDown}
@@ -106,7 +111,8 @@ export default function TodoList() {
                 ) : (
                     <>
                         {todos.filter((todo) => !todo.isDone).map((todo) => (
-                            <Todo key={todo.id} initialTodo={todo} updateTodoListState={updateTodoListState}/>
+                            <Todo key={todo.id} initialTodo={todo} updateTodoListState={updateTodoListState}
+                                  deleteTodoListState={deleteTodoListState}/>
                         ))}
                     </>
                 )}
@@ -128,7 +134,8 @@ export default function TodoList() {
                 ) : (
                     <>
                         {todos.filter((todo) => todo.isDone).map((todo) => (
-                            <Todo key={todo.id} initialTodo={todo} updateTodoListState={updateTodoListState}/>
+                            <Todo key={todo.id} initialTodo={todo} updateTodoListState={updateTodoListState}
+                                  deleteTodoListState={deleteTodoListState}/>
                         ))}
                     </>
 
