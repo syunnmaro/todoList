@@ -6,3 +6,7 @@ export type updateTodoType = {
     title: string
     isDone: boolean
 }
+
+export type deleteTodoType = {
+    id: string,
+}

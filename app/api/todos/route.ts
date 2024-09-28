@@ -33,3 +33,13 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json(res)
 }
 
+export async function DELETE(req: NextRequest) {
+    const data = await req.json()
+    const res = await prisma.todo.delete({
+        where: {
+            id: data.id,
+        }
+    })
+    return NextResponse.json(res)
+}
+
