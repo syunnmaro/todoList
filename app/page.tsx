@@ -1,67 +1,51 @@
 "use client"
-import {Todo} from "@prisma/client";
-import {Task} from "@/app/components/task";
+import {Todo as TodoType} from "@prisma/client";
+import {Todo} from "@/app/components/Todo";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronUp} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
 import {ulid} from "ulid";
-
-export type createTaskType = {
-    title: string
-}
-export type updateTaskType = {
-    id: string,
-    title: string
-    isDone: boolean
-}
-
+import {createTodoType} from "@/app/type/apiType";
 
 export default function () {
-    const getTasks = async () => {
-        const res = await fetch(`/api/tasks`, {cache: "no-cache"});
-        return await res.json()
-    }
-
-    const [tasks, setTasks] = useState<Todo[]>([]);
-    const addTask = (newTask: Todo): void => {
-        setTasks(prevTasks => [...prevTasks, newTask]);
+    const [todos, setTodos] = useState<TodoType[]>([]);
+    const addTodoToState = (newTodo: TodoType): void => {
+        setTodos([...todos, newTodo]);
     };
-    const updateTaskList = (newTask: Todo) => {
-        setTasks(tasks.map(task =>
-            task.id === newTask.id ? newTask : task
+    const updateTodoListState = (newTodo: TodoType) => {
+        setTodos(todos.map(todo =>
+            todo.id === newTodo.id ? newTodo : todo
         ));
     };
-    const saveData = async (task: createTaskType) => {
-        await fetch(`/api/tasks`, {
+    const sendPostRequest = async (todo: createTodoType) => {
+        await fetch(`/api/todos`, {
             cache: "no-cache", method: "POST", body: JSON.stringify({
-                title: task.title,
+                title: todo.title,
             })
         });
     }
-    const taskSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         const input = e.target as HTMLInputElement;
         if (e.key !== "Enter" || input.value === "") {
             return;
         }
-        addTask({title: input.value, isDone: false, id: ulid()});
-        saveData({title: input.value});
+        addTodoToState({title: input.value, isDone: false, id: ulid()});
+        sendPostRequest({title: input.value});
         input.value = "";
     };
     useEffect(() => {
-        // 非同期関数の作成
         const fetchFunction = async () => {
-            const res = await getTasks();
-            // set関数で値の更新
-            setTasks(res);
+            const res = await fetch(`/api/todos`, {cache: "no-cache"});
+            const jsonRes = await res.json()
+            setTodos(jsonRes);
         };
-        // 非同期関数の実行
         fetchFunction();
     }, []);
     return (
         <div className="max-w-xl bg-gray-100 mx-auto max-h-screen h-screen p-2">
             <div className="border-[1px] border-gray-200 shadow-md w-full mt-24">
                 <input type="text" placeholder="タスクを追加" className="text-blue-400 p-2 outline-0 w-full"
-                       onKeyDown={(e) => taskSubmit(e)}/>
+                       onKeyDown={(e) => handleKeyDown(e)}/>
             </div>
             <table className="border-[1px] border-gray-200 shadow-md w-full bg-white mt-4 text-left">
                 <thead className="text-gray-600">
@@ -71,8 +55,8 @@ export default function () {
                 </tr>
                 </thead>
                 <tbody>
-                {tasks.filter((task: Todo) => !task.isDone).map((task: Todo) => (
-                    <Task key={task.id} initialTask={task} updateTaskList={updateTaskList}/>
+                {todos.filter((todo: TodoType) => !todo.isDone).map((todo: TodoType) => (
+                    <Todo key={todo.id} initialTodo={todo} updateTodoListState={updateTodoListState}/>
                 ))}
                 <tr className="bg-white text-gray-600 border-[0.1px] border-gray-100">
                     <td className="h-full">
@@ -82,8 +66,8 @@ export default function () {
                         </div>
                     </td>
                 </tr>
-                {tasks.filter((task: Todo) => task.isDone).map((task: Todo) => (
-                    <Task key={task.id} initialTask={task} updateTaskList={updateTaskList}/>
+                {todos.filter((todo: TodoType) => todo.isDone).map((todo: TodoType) => (
+                    <Todo key={todo.id} initialTodo={todo} updateTodoListState={updateTodoListState}/>
                 ))}
                 </tbody>
             </table>

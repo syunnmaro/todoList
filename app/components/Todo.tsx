@@ -1,55 +1,55 @@
 "use client"
-import {Todo} from '@prisma/client';
+import {Todo as TodoType} from '@prisma/client';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCircle, faCircleCheck} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
-import {updateTaskType} from "@/app/page";
+import {updateTodoType} from "@/app/type/apiType";
 
-export const Task = ({initialTask, updateTaskList}: {
-    initialTask: Todo,
-    updateTaskList: (task: Todo) => void
+export const Todo = ({initialTodo, updateTodoListState}: {
+    initialTodo: TodoType,
+    updateTodoListState: (todo: TodoType) => void
 }) => {
-    const [task, setTask] = useState<Todo>(initialTask);
-    const updateData = async (task: updateTaskType) => {
-        await fetch(`/api/tasks`, {
+    const [todo, setTodo] = useState<TodoType>(initialTodo);
+    const sendPutRequest = async (todo: updateTodoType) => {
+        await fetch(`/api/todos`, {
             cache: "no-cache", method: "PUT", body: JSON.stringify({
-                id: task.id,
-                title: task.title,
-                isDone: task.isDone
+                id: todo.id,
+                title: todo.title,
+                isDone: todo.isDone
             })
         });
     }
     const reverseDoneStatus = () => {
-        const newTask = {
-            ...task,
-            isDone: !task.isDone
+        const newTodo = {
+            ...todo,
+            isDone: !todo.isDone
         }
-        setTask(newTask);
-        updateData(newTask);
-        return newTask
+        setTodo(newTodo);
+        sendPutRequest(newTodo);
+        return newTodo
     };
 
     const updateTitleStatus = (e: React.FormEvent<HTMLInputElement>) => {
         const input = e.target as HTMLInputElement;
-        const newTask = {
-            ...task,
+        const newTodo = {
+            ...todo,
             title: input.value
         }
-        setTask(newTask);
-        return newTask
+        setTodo(newTodo);
+        return newTodo
     };
 
     useEffect(() => {
-        if (initialTask !== task) {
-            updateTaskList(task);
+        if (initialTodo !== todo) {
+            updateTodoListState(todo);
         }
-    }, [task, updateTaskList]);
+    }, [todo, updateTodoListState]);
 
     return (
         <tr className="bg-white text-gray-600 border-[0.1px] border-gray-100 ">
-            <th className="">
+            <th>
                 <div className="border-2 hover:border-gray-300 border-white p-2">
-                    {task.isDone
+                    {todo.isDone
                         ? <FontAwesomeIcon icon={faCircleCheck} onClick={reverseDoneStatus}/>
                         : <FontAwesomeIcon icon={faCircle} onClick={reverseDoneStatus}/>
                     }
@@ -57,9 +57,9 @@ export const Task = ({initialTask, updateTaskList}: {
             </th>
             <td className="h-full">
                 <div className="border-2 hover:border-gray-300 border-white focus:shadow-2xl h-12 outline-none">
-                    <input value={task.title} onInput={(e) => updateTitleStatus(e)}
-                           className={`h-full outline-none ${task.isDone ? "line-through decoration-2" : ""}`}
-                           onBlur={() => updateData(task)}/>
+                    <input value={todo.title} onInput={(e) => updateTitleStatus(e)}
+                           className={`h-full outline-none ${todo.isDone ? "line-through decoration-2" : ""}`}
+                           onBlur={() => sendPutRequest(todo)}/>
                 </div>
             </td>
         </tr>
