@@ -1,13 +1,14 @@
 "use client"
 import {Todo as TodoType} from '@prisma/client';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCircle, faCircleCheck} from "@fortawesome/free-solid-svg-icons";
+import {faCircle, faCircleCheck, faTrash} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
-import {updateTodoType} from "@/app/type/apiType";
+import {deleteTodoType, updateTodoType} from "@/app/type/apiType";
 
-export const Todo = ({initialTodo, updateTodoListState}: {
+export const Todo = ({initialTodo, updateTodoListState, deleteTodoListState}: {
     initialTodo: TodoType,
-    updateTodoListState: (todo: TodoType) => void
+    updateTodoListState: (todo: TodoType) => void,
+    deleteTodoListState: (todo: TodoType) => void,
 }) => {
     const [todo, setTodo] = useState<TodoType>(initialTodo);
     const sendPutRequest = async (todo: updateTodoType) => {
@@ -19,7 +20,14 @@ export const Todo = ({initialTodo, updateTodoListState}: {
             })
         });
     }
-    const reverseDoneStatus = () => {
+    const sendDeleteRequest = async (todo: deleteTodoType) => {
+        await fetch(`/api/todos`, {
+            cache: "no-cache", method: "DELETE", body: JSON.stringify({
+                id: todo.id,
+            })
+        });
+    }
+    const reverDoneState = () => {
         const newTodo = {
             ...todo,
             isDone: !todo.isDone
@@ -29,7 +37,7 @@ export const Todo = ({initialTodo, updateTodoListState}: {
         return newTodo
     };
 
-    const updateTitleStatus = (e: React.FormEvent<HTMLInputElement>) => {
+    const updateTitleState = (e: React.FormEvent<HTMLInputElement>) => {
         const input = e.target as HTMLInputElement;
         const newTodo = {
             ...todo,
@@ -50,18 +58,27 @@ export const Todo = ({initialTodo, updateTodoListState}: {
             <th>
                 <div className="border-2 hover:border-gray-300 border-white p-2">
                     {todo.isDone
-                        ? <FontAwesomeIcon icon={faCircleCheck} onClick={reverseDoneStatus}/>
-                        : <FontAwesomeIcon icon={faCircle} onClick={reverseDoneStatus}/>
+                        ? <FontAwesomeIcon icon={faCircleCheck} onClick={reverDoneState}/>
+                        : <FontAwesomeIcon icon={faCircle} onClick={reverDoneState}/>
                     }
                 </div>
             </th>
             <td className="h-full">
                 <div className="border-2 hover:border-gray-300 border-white focus:shadow-2xl h-12 outline-none">
-                    <input value={todo.title} onInput={(e) => updateTitleStatus(e)}
+                    <input value={todo.title} onInput={(e) => updateTitleState(e)}
                            className={`h-full outline-none ${todo.isDone ? "line-through decoration-2" : ""}`}
                            onBlur={() => sendPutRequest(todo)}/>
                 </div>
             </td>
+            <td className="h-full">
+                <div className="border-2 hover:border-gray-300 border-white focus:shadow-2xl h-12 outline-none ">
+                    <FontAwesomeIcon icon={faTrash} onClick={() => {
+                        deleteTodoListState(todo)
+                        sendDeleteRequest(todo)
+                    }}/>
+                </div>
+            </td>
+
         </tr>
     );
 };
