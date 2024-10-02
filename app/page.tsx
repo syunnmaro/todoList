@@ -4,53 +4,56 @@ import {Todo} from "@/app/components/todo";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronUp} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
-import {ulid} from "ulid";
-import {createTodoType} from "@/app/type/apiType";
 import LoadingTodos from "@/app/components/loadingTodos";
+import {sendPostRequest} from "@/app/utils/apiClient";
 
 export default function TodoList() {
     const [todos, setTodos] = useState<TodoType[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const addTodoToState = (newTodo: TodoType): void => {
-        setTodos((prevTodos) => [...prevTodos, newTodo]);
+        setTodos((prevTodos) => {
+            return [...prevTodos, newTodo];
+        });
     };
 
     const updateTodoListState = (newTodo: TodoType) => {
         setTodos((prevTodos) =>
             prevTodos.map((todo) => (todo.id === newTodo.id ? newTodo : todo))
         );
+        console.log(todos)
     };
+    const replaceTodoListState = (todos: TodoType[]) => {
+        setTodos(todos)
+    }
     const deleteTodoListState = (deletedTodo: TodoType) => {
         setTodos((prevTodos) =>
             prevTodos.filter((todo) => (todo.id !== deletedTodo.id))
         )
     }
 
-    const sendPostRequest = async (todo: createTodoType) => {
-        try {
-            await fetch(`/api/todos`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    title: todo.title,
-                }),
-            });
-        } catch (error) {
-            console.error("Error sending POST request:", error);
-        }
-    };
-
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         const input = e.target as HTMLInputElement;
         if (e.key !== "Enter" || input.value.trim() === "") {
             return;
         }
-        const newTodo: TodoType = {title: input.value, isDone: false, id: ulid()};
-        addTodoToState(newTodo);
-        sendPostRequest({title: input.value});
+        // // フロントでいち早く反映するために、入力されたタイトルをもとに仮のTodoを追加する
+        // const temporaryNewTodo: TodoType = {title: input.value, isDone: false, id: ulid()};
+        // console.log(temporaryNewTodo)
+        // addTodoToState(temporaryNewTodo);
+
+        // ここの実装がうまくいかなかった。addTodoToStateによってstateに追加される前にupdateTodoListStateが該当のIDを検索しようとして、見つからず値が更新されないということが起きているみたい。
+        try {
+            sendPostRequest({title: input.value}).then(async res => {
+                if (res.status === 200) {
+                    const jsonRes = await res.json()
+                    addTodoToState(jsonRes);
+                }
+            });
+        } catch (e) {
+            console.error("Internal Server Error");
+        }
+
         input.value = "";
     };
 
@@ -64,6 +67,7 @@ export default function TodoList() {
                 const jsonRes = await res.json();
                 setTodos(jsonRes);
             } catch (error) {
+                // ユーザーに知らせるUIがあるともっといい。
                 console.error("Error fetching todos:", error);
             } finally {
                 setIsLoading(false);
