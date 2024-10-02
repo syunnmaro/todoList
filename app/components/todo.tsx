@@ -3,7 +3,7 @@ import {Todo as TodoType} from '@prisma/client';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCircle, faCircleCheck, faTrash} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
-import {deleteTodoType, updateTodoType} from "@/app/type/apiType";
+import {sendDeleteRequest, sendPutRequest} from "@/app/utils/apiClient";
 
 export const Todo = ({initialTodo, updateTodoListState, deleteTodoListState}: {
     initialTodo: TodoType,
@@ -11,29 +11,12 @@ export const Todo = ({initialTodo, updateTodoListState, deleteTodoListState}: {
     deleteTodoListState: (todo: TodoType) => void,
 }) => {
     const [todo, setTodo] = useState<TodoType>(initialTodo);
-    const sendPutRequest = async (todo: updateTodoType) => {
-        await fetch(`/api/todos`, {
-            cache: "no-cache", method: "PUT", body: JSON.stringify({
-                id: todo.id,
-                title: todo.title,
-                isDone: todo.isDone
-            })
-        });
-    }
-    const sendDeleteRequest = async (todo: deleteTodoType) => {
-        await fetch(`/api/todos`, {
-            cache: "no-cache", method: "DELETE", body: JSON.stringify({
-                id: todo.id,
-            })
-        });
-    }
-    const reverDoneState = () => {
+    const reverseDoneState = () => {
         const newTodo = {
             ...todo,
             isDone: !todo.isDone
         }
         setTodo(newTodo);
-        sendPutRequest(newTodo);
         return newTodo
     };
 
@@ -47,6 +30,34 @@ export const Todo = ({initialTodo, updateTodoListState, deleteTodoListState}: {
         return newTodo
     };
 
+    const handleUpdateTitle = () => {
+        try {
+            // stateが更新される前にリクエストが送られる可能性がある。
+            sendPutRequest(todo)
+        } catch (e) {
+            // エラーハンドリングをしっかりして、ユーザーにUIとして知らせたい。
+            console.error("Internal Server Error");
+        }
+
+    }
+    const handleDeleteTodo = () => {
+        deleteTodoListState(todo)
+        try {
+            sendDeleteRequest(todo)
+        } catch (e) {
+            console.error("Internal Server Error");
+        }
+    }
+
+    const handleUpdateDone = () => {
+        const newTodo = reverseDoneState()
+        try {
+            sendPutRequest(newTodo)
+        } catch (e) {
+            console.error("Internal Server Error");
+        }
+    }
+
     useEffect(() => {
         if (initialTodo !== todo) {
             updateTodoListState(todo);
@@ -58,8 +69,8 @@ export const Todo = ({initialTodo, updateTodoListState, deleteTodoListState}: {
             <th>
                 <div className="border-2 hover:border-gray-300 border-white p-2">
                     {todo.isDone
-                        ? <FontAwesomeIcon icon={faCircleCheck} onClick={reverDoneState}/>
-                        : <FontAwesomeIcon icon={faCircle} onClick={reverDoneState}/>
+                        ? <FontAwesomeIcon icon={faCircleCheck} onClick={handleUpdateDone}/>
+                        : <FontAwesomeIcon icon={faCircle} onClick={handleUpdateDone}/>
                     }
                 </div>
             </th>
@@ -67,15 +78,12 @@ export const Todo = ({initialTodo, updateTodoListState, deleteTodoListState}: {
                 <div className="border-2 hover:border-gray-300 border-white focus:shadow-2xl h-12 outline-none">
                     <input value={todo.title} onInput={(e) => updateTitleState(e)}
                            className={`h-full outline-none ${todo.isDone ? "line-through decoration-2" : ""}`}
-                           onBlur={() => sendPutRequest(todo)}/>
+                           onBlur={handleUpdateTitle}/>
                 </div>
             </td>
             <td className="h-full">
                 <div className="border-2 hover:border-gray-300 border-white focus:shadow-2xl h-12 outline-none ">
-                    <FontAwesomeIcon icon={faTrash} onClick={() => {
-                        deleteTodoListState(todo)
-                        sendDeleteRequest(todo)
-                    }}/>
+                    <FontAwesomeIcon icon={faTrash} onClick={handleDeleteTodo}/>
                 </div>
             </td>
 
